@@ -14,7 +14,5 @@ Here's a table showing the improvements I did to make the application go faster.
 
 ### Initial Review
 The profile of 01 displayed `Transform::float4::dot(Vertex const&) const` as the the hottest function.
-Consuming ~23% of the execution time. The function does float multiplication operations and sums them along with another float. I can't tell if there is a way to optimize this. Perhpas there is something to be done with the struct float4 though as the function `Transform::operator*(Vertex const&)` also lies in the struct, coming with ~13% of the programs execution time.
-
-### 
-
+Consuming ~23% of the execution time. The function does float multiplication operations and sums them along with another float. I can't tell if there is a way to optimize this. 
+Perhaps there is something to be done with the struct float4 as the function `Transform::operator*(Vertex const&)` also lies in the struct, coming with ~13% of the programs execution time.
