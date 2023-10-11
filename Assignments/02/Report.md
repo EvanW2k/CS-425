@@ -7,7 +7,6 @@ Here's a table showing the improvements I did to make the application go faster.
 | Version | Time | Speedup | Changes |
 | :-----: | ---- | :-----: | :------: | ------- |
 | [01] | 658.43s | &mdash; | Initial version - but with -O3 |
-|  |  |  | Initial version - no changes |
 
 
 
