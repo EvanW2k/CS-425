@@ -20,6 +20,6 @@ Initial run with Final data with no profiling and -O3 ran in ~658 seconds. The o
 
 ### Threading main for loop
 
-Split the iteration of data among 10 threads, using a lamda function and having easch thread store sperate results.
-Each thread fed into an array of Result structs where a Result struct has a maxIter and a records vector. 
+Split the iteration of data among 10 threads, using a lamda function and having each thread store sperate results.
+Each thread fed into an array of Result structs (a Result struct has a maxIter and a records vector). 
 After all threads are done the results are compared and the index with the best result is used for output.
