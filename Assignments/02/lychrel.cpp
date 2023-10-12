@@ -47,9 +47,8 @@ int main() {
 
     std::cerr << "Processing " << data.size() << " values ...\n";
 
-
-
     const size_t size = data.size() / MaxThreads;
+
 
     Result results[MaxThreads];
 
