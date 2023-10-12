@@ -16,6 +16,7 @@
 #include <vector>
 
 #include <thread>   // for threading
+#include <barrier>
 
 #include "LychrelData.h"
 
@@ -47,24 +48,26 @@ int main() {
 
     std::cerr << "Processing " << data.size() << " values ...\n";
 
-    const size_t size = data.size() / MaxThreads;
+    const size_t chunk_size = data.size() / MaxThreads + 1;
 
-
+    std::barrier barrier(MaxThreads);
     Result results[MaxThreads];
 
     // Iterate across all available data values, processing them using the 
     //   reverse-digits and sum technique described in class.
     for (auto id = 0; id < MaxThreads; ++id) {
 
-        const size_t begin = id * size;
-        const size_t end = std::min(data.size(), begin + size);
+       /* const size_t begin = id * size;
+        const size_t end = std::min(data.size(), begin + size);*/
 
-        std::thread t{ [=, &results, &data]() {
+        std::thread t{ [=, &results, &data, &barrier]() {
 
-            for (auto i = begin; i < end; ++i) {
-                Number number = data[i];
+
+            Number number;
+            while (data.getNext(number)) {
 
                 size_t iter = 0;
+
                 Number n = number;
 
                 // The Lychrel loop - for any iteration, take the number, reverse
@@ -116,19 +119,23 @@ int main() {
                 //   tha the current maximum (maxIter) or we've exceeded the number
                 //   of permissible iterations, ignore the current result and move
                 //   onto the next number.
-                if (!(iter < results[id].maxIter || iter == MaxIterations)) {
-                    // Otherwise update our records, which possibly means discarding
-                    //   our current maximum and rebuilding our records list.
-                    Record record{ number, n };
-                    if (iter > results[id].maxIter) {
-                        results[id].records.clear();
-                        results[id].maxIter = iter;
-                    }
+                if ((iter < results[id].maxIter || iter == MaxIterations)) { continue; }
 
-                    results[id].records.push_back(record);
-
+                // Otherwise update our records, which possibly means discarding
+                //   our current maximum and rebuilding our records list.
+                Record record{ number, n };
+                if (iter > results[id].maxIter) {
+                    results[id].records.clear();
+                    results[id].maxIter = iter;
                 }
+
+                results[id].records.push_back(record);
+
+                
             }
+
+            // sync threads
+            barrier.arrive_and_wait();
         } };
 
 
