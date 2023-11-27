@@ -17,4 +17,9 @@ After finally getting the pictures to load it took 1.1 minutes according ot the 
 
 ### Encapsulated in Async Task
 
-No time change
+No time change. 
+
+### Producer/Consumer ring buffer
+
+Initally attempted with no succsess, added Async task instead.
+
