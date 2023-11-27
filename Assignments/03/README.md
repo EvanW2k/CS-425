@@ -11,9 +11,6 @@ Here's a table showing the improvements I did to make the application go faster.
 |  |  |  |  |
 
 
-
-## Profiling Analysis
-
 ### Initial Review
 
 After finally getting the pictures to load it took 1.1 minutes according ot the dev tools network tab.
