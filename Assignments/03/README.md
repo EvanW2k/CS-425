@@ -7,7 +7,7 @@ Here's a table showing the improvements I did to make the application go faster.
 | Version | Time | Speedup | Changes |
 | :-----: | ---- | :-----: | ------- |
 | [01] | 1.1 min | &mdash; | Initial version |
-| [02] |  |  |  |
+| [02] | 1.1 min | 0x | encapsulated in async task |  
 |  |  |  |  |
 
 
@@ -15,4 +15,6 @@ Here's a table showing the improvements I did to make the application go faster.
 
 After finally getting the pictures to load it took 1.1 minutes according ot the dev tools network tab.
 
+### Encapsulated in Async Task
 
+No time change
