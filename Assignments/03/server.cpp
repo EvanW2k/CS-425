@@ -27,20 +27,49 @@ using namespace std;
 //  (Don't use any of them.  Generally, above 9000 is usually pretty clear)
 //
 const uint16_t DefaultPort = 8104; // Update this variable with your assigned port value
-const int bufferSize = 10;
+const int bufferSize = 15;
 const int numProducers = 10;
-const int numConsumers = 4;
+const int numConsumers = 30;
 
 
 // ring buffer class
-template <typename T, size_t N>
-class RingBuffer : public vector<T> {
-        
-        using size_type = vector<T>::size_type;
-        using Index = atomic<size_type>;
+template <int N>
+class RingBuffer {
 
-        Index nextRequest = 0;
-        Index nextResponse = 0;
+
+    public:
+        RingBuffer() {
+            buffer.resize(N);
+        }
+
+        void request(const int& t) {
+            requests.acquire();
+            {
+                lock_guard lock{ requestMutex };
+                buffer[nextRequest] = t;
+                nextRequest = ++nextRequest % N;
+            }
+
+            responses.release();
+        }
+
+        int respond() {
+            int t;
+            responses.acquire();
+            {
+                lock_guard lock{ responseMutex };
+                t = buffer[nextResponse];
+                nextResponse = ++nextResponse % N;
+            }
+            requests.release();
+            return t;
+        }
+
+    private:
+        vector<int> buffer;
+
+        int nextRequest = 0;
+        int nextResponse = 0;
 
         counting_semaphore<N> requests{ N };
         counting_semaphore<N> responses{ 0 };
@@ -48,34 +77,6 @@ class RingBuffer : public vector<T> {
         mutex requestMutex;
         mutex responseMutex;
 
-    public:
-        RingBuffer() {
-            size_type count = N;
-            this->resize(count);
-        }
-
-        void request(const T& t) {
-            requests.acquire();
-            {
-                lock_guard lock{ requestMutex };
-                this->assign(nextRequest, t);
-                nextRequest = ++nextRequest % N;
-            }
-
-            responses.release();
-        }
-
-        T respond() {
-            T t;
-            responses.acquire();
-            {
-                lock_guard lock{ responseMutex };
-                t = this->at(nextResponse);
-                nextResponse = ++nextResponse % N;
-            }
-            requests.release();
-            return t;
-        }
 };
 
 
@@ -96,7 +97,7 @@ int main(int argc, char* argv[]) {
     //
     // When you connect from your web browser, use your unique port value
     //   after the color (:) in the URL.
-    Connection connection(port);
+    //Connection connection(port);
 
 
     // Process sessions.  A session begins with a web browser making a
@@ -166,45 +167,50 @@ int main(int argc, char* argv[]) {
         ////   message, which indicates this session is over.
         //session << response;
 
-    //RingBuffer<int, bufferSize> buffer;
+    Connection connection(port);
+    RingBuffer<bufferSize> buffer;
    
-    //while (connection) {
+   
 
-    //    // producer thread
-    //        jthread producerThread{ [&]() {
-    //            cout << "a" << endl;
-    //            while (connection) {
-    //                cout << "d" << endl;
-    //                int client = connection.accept();
-    //                buffer.request(client);
-    //                cout << "b" << endl;
-    //            }     
-    //            cout << "c" << endl;
-    //        } };
+   // producer threads
+   for (int i = 0; i < numProducers; ++i) {
+        thread producerThread{ [&]() {
+            int client;
+            while (connection) {
+                client = connection.accept();
+                cout << "Producing\n";
+                buffer.request(client);
+            }
+        } };
+        producerThread.detach();
+   }
 
 
+    // consumer threads
+    for (int i = 0; i < numConsumers; ++i) {
+        thread consumerThread{ [&]() {
+                int client;
+                while (connection) {
+                    client = buffer.respond();
+                    cout << "Consuming\n";
+                    Session session(client);
+                    string msg;
+                    session >> msg;
+                    HTTPRequest request(msg);
+                    const char* root = "/home/faculty/shreiner/public_html/03";
+                    HTTPResponse response(request, root);
+                    session << response;
+                }
+        } };
+        (i < numConsumers - 1) ? consumerThread.detach() : consumerThread.join();
+    }
 
-    //    // consumer threads
-    //        jthread consumerThread{ [&]() {
-    //            while (connection) {
-    //                cout << "1" << endl;
-    //                int client = buffer.respond();
-    //                cout << "6" << endl;
-    //                Session session(client);
-    //                cout << "5" << endl;
-    //                string msg;
-    //                session >> msg;
-    //                cout << "2" << endl;
-    //                HTTPRequest request(msg);
-    //                const char* root = "/home/faculty/shreiner/public_html/03";
-    //                HTTPResponse response(request, root);
-    //                session << response;
-    //                cout << "3" << endl;
-    //            }
-    //        } };
-    //}
+
+  /* Connection connection(port);
 
    while (connection) {
+       cout << "Hello\n";
+
        auto future = async([&]() {
            Session session(connection.accept());
            std::string msg;
@@ -216,6 +222,6 @@ int main(int argc, char* argv[]) {
            session << response;
            });
         
-    }
+    }*/
     return 0;
 }
