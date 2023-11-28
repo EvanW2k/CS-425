@@ -87,93 +87,13 @@ int main(int argc, char* argv[]) {
 
     uint16_t port = argc > 1 ? std::stol(argv[1]) : DefaultPort;
 
-    // Opens a connection on the given port.  With a suitable URL
-    //
-    //     http://<hostname>:<port> (e.g., http://blue.cs.sonoma.edu:8000)
-    //
-    //    this will set up networking socket at the given port, and wait
-    //    for another application (like a web browser) to start a
-    //    conversation.
-    //
-    // When you connect from your web browser, use your unique port value
-    //   after the color (:) in the URL.
-    //Connection connection(port);
-
-
-    // Process sessions.  A session begins with a web browser making a
-    //   request.  When the request is made, our connection "accepts"
-    //   the connection, and starts a session.
-
-
-        //// A session is composed of a bunch of requests (from the "client",
-        ////   like a web browser), and responses from us, the web "server".
-        ////   Each request is merely an ASCII string (with some special
-        ////   characters specially encoded.  We don't implement all that
-        ////   fancy stuff here.  We're keeping it simple).
-        //Session session(connection.accept());
-
-        //// A message received from the client will be a string like
-        ////
-        ////      GET <filename> HTTP/1.1 [plus a bunch of optional stuff]
-        ////
-        ////    Here, we merely read that string from the socket into
-        ////    a string.
-        //std::string msg;
-        //session >> msg;
-
-        //// If you want to see the raw "protocol", uncomment the
-        ////   following line:
-        ////
-        //// std::cout << msg;
-
-        //// However, if our msg has requests in it, we send it to a
-        ////   request parser, HTTPRequest.  The resulting request
-        ////   contains the type of request, the filename, and other
-        ////   information.
-        //HTTPRequest request(msg);
-
-        ////  If you want to see the parsed message, just uncomment the
-        ////    following line:
-        ////
-        //// std::cout << request << "\n";
-
-        ////  if you want to see the parsed options, uncomment the
-        ////    following line
-        ////
-        //// std::cout << request.options() << "\n";
-
-        //// We create a response to the request, which we encode in
-        ////   an HTTPResponse object.  It prepares the appropriate
-        ////   HTTP header, and then includes all of the relevant
-        ////   data that's to be sent back to the web browser.
-        ////
-        //// Web servers have a concept of a "root" directory (similar to
-        ////   a filesystem), which is the top-level of where all of the
-        ////   files the server is able to send is located.  We include
-        ////   that path here, so we're all looking at the same files.
-        //const char* root = "/home/faculty/shreiner/public_html/03";
-        //HTTPResponse response(request, root);
-
-        ////  Again, if you want to see the contents of the response
-        ////    (specifically, the header, which is human readable, but
-        ////    not the returned data), you can just print this to
-        ////    std::cout as well.
-        ////
-        //// std::cout << response << "\n";
-
-        //// Most importantly, send the response back to the web client.
-        ////
-        //// We keep using the same session until we get an empty
-        ////   message, which indicates this session is over.
-        //session << response;
-
     Connection connection(port);
     RingBuffer<bufferSize> buffer;
    
    
 
-   // producer threads
-   for (int i = 0; i < numProducers; ++i) {
+    // producer threads
+    for (int i = 0; i < numProducers; ++i) {
         thread producerThread{ [&]() {
             int client;
             while (connection) {
@@ -183,7 +103,7 @@ int main(int argc, char* argv[]) {
             }
         } };
         producerThread.detach();
-   }
+    }
 
 
     // consumer threads
@@ -205,23 +125,5 @@ int main(int argc, char* argv[]) {
         (i < numConsumers - 1) ? consumerThread.detach() : consumerThread.join();
     }
 
-
-  /* Connection connection(port);
-
-   while (connection) {
-       cout << "Hello\n";
-
-       auto future = async([&]() {
-           Session session(connection.accept());
-           std::string msg;
-           session >> msg;
-
-           HTTPRequest request(msg);
-           const char* root = "/home/faculty/shreiner/public_html/03";
-           HTTPResponse response(request, root);
-           session << response;
-           });
-        
-    }*/
     return 0;
 }
